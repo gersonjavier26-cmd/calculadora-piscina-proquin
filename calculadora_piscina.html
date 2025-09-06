@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Dosis para Piscina</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUpFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-enter {
+            animation: slideUpFadeIn 0.6s ease-out forwards;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+            background-image: linear-gradient(to top, #e0f2fe 0%, #f0f9ff 100%);
+        }
+        .help-tooltip {
+            position: absolute;
+            display: none;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e40af; /* Dark blue */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            width: max-content;
+            max-width: 250px;
+            z-index: 10;
+            margin-top: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .help-icon:hover + .help-tooltip, .help-icon:focus + .help-tooltip {
+            display: block;
+        }
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease-in-out;
+            animation: fadeIn 0.5s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            border: none;
+            position: relative;
+            top: 0;
+        }
+        .btn-primary {
+            background-image: linear-gradient(to bottom, #3b82f6, #2563eb);
+            color: white;
+            border: 1px solid #1d4ed8;
+            box-shadow: 0 4px 0 0 #1d4ed8;
+        }
+        .btn-primary:hover {
+            background-image: linear-gradient(to bottom, #60a5fa, #3b82f6);
+            top: -2px;
+            box-shadow: 0 6px 0 0 #1d4ed8;
+        }
+        .btn-primary:active {
+            top: 2px;
+            box-shadow: 0 2px 0 0 #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            box-shadow: 0 4px 0 0 #c7d2fe;
+        }
+        .btn-secondary:hover {
+            background-color: #c7d2fe;
+            top: -2px;
+            box-shadow: 0 6px 0 0 #a5b4fc;
+        }
+        .btn-secondary:active {
+            top: 2px;
+            box-shadow: 0 2px 0 0 #a5b4fc;
+        }
+
+        input[type="number"] {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 10px 14px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+         input[type="number"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+        .radio-label {
+            display: inline-block;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            text-align: center;
+            background-color: #f9fafb;
+        }
+        input[type="radio"]:checked + .radio-label {
+            background-color: #dbeafe; /* Blue 100 */
+            border-color: #2563eb; /* Blue 600 */
+            color: #1e40af; /* Blue 800 */
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) inset;
+        }
+        input[type="radio"] {
+           display: none;
+        }
+        .result-item {
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
+        .result-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <main class="w-full max-w-2xl mx-auto">
+        <div class="card">
+            <!-- Header -->
+            <header class="text-center mb-8">
+                <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 pb-2">Calculadora para Piscina</h1>
+                <p class="text-gray-500 mt-2">Calcula la dosis exacta de químicos para tu piscina.</p>
+            </header>
+
+            <!-- Step 1: Treatment Type -->
+            <section id="step1">
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <h2 class="text-xl font-semibold text-gray-700">Paso 1: Elige el tipo de dosificación</h2>
+                    <div class="relative">
+                        <svg class="w-6 h-6 text-gray-400 cursor-pointer help-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                        </svg>
+                        <div class="help-tooltip">
+                            <b>Mantenimiento:</b> Tratamiento preventivo para piscinas con agua limpia.<br><br><b>Limpieza:</b> Tratamiento correctivo para piscinas con agua turbia o verde.
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button class="btn btn-primary text-lg" onclick="selectTreatment('maintenance')">
+                        Mantenimiento
+                    </button>
+                    <button class="btn btn-primary text-lg" onclick="selectTreatment('cleaning')">
+                        Limpieza
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 2: Pool Size -->
+            <section id="step2" class="hidden mt-6">
+                 <div class="flex items-center justify-center gap-2 mb-4">
+                    <h2 class="text-xl font-semibold text-gray-700">Paso 2: Define el tamaño de tu piscina</h2>
+                 </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                     <div>
+                        <input type="radio" id="inputByVolume" name="sizeMethod" value="volume" onchange="toggleSizeInput('volume')" checked>
+                        <label for="inputByVolume" class="radio-label">Ingresar Volumen</label>
+                    </div>
+                     <div>
+                        <input type="radio" id="inputByDimensions" name="sizeMethod" value="dimensions" onchange="toggleSizeInput('dimensions')">
+                        <label for="inputByDimensions" class="radio-label">Usar Medidas</label>
+                    </div>
+                </div>
+
+                <!-- Volume Input -->
+                <div id="volumeInput" class="space-y-2">
+                    <label for="poolVolume" class="font-medium text-gray-700">Volumen de la piscina (en litros)</label>
+                    <input type="number" id="poolVolume" placeholder="Ej: 50000" class="w-full">
+                </div>
+
+                <!-- Dimensions Input -->
+                <div id="dimensionsInput" class="hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <input type="radio" id="shapeRectangular" name="poolShape" value="rectangular" onchange="toggleShapeInputs('rectangular')" checked>
+                            <label for="shapeRectangular" class="radio-label">Rectangular</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="shapeRound" name="poolShape" value="round" onchange="toggleShapeInputs('round')">
+                            <label for="shapeRound" class="radio-label">Redonda</label>
+                        </div>
+                    </div>
+
+                    <div id="rectangularInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label for="poolLength" class="block text-sm font-medium text-gray-700 mb-1">Largo (m)</label>
+                            <input type="number" id="poolLength" placeholder="Ej: 8">
+                        </div>
+                        <div>
+                            <label for="poolWidth" class="block text-sm font-medium text-gray-700 mb-1">Ancho (m)</label>
+                            <input type="number" id="poolWidth" placeholder="Ej: 4">
+                        </div>
+                        <div>
+                            <label for="poolDepthRect" class="block text-sm font-medium text-gray-700 mb-1">Profundidad (m)</label>
+                            <input type="number" id="poolDepthRect" placeholder="Ej: 1.5">
+                        </div>
+                    </div>
+
+                    <div id="roundInputs" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="poolDiameter" class="block text-sm font-medium text-gray-700 mb-1">Diámetro (m)</label>
+                            <input type="number" id="poolDiameter" placeholder="Ej: 5">
+                        </div>
+                        <div>
+                            <label for="poolDepthRound" class="block text-sm font-medium text-gray-700 mb-1">Profundidad (m)</label>
+                            <input type="number" id="poolDepthRound" placeholder="Ej: 1.5">
+                        </div>
+                    </div>
+                </div>
+                 <button class="btn btn-primary w-full mt-6 text-lg" onclick="calculateDosage()">Calcular Dosis</button>
+            </section>
+            
+            <!-- Step 3: Results -->
+            <section id="results" class="hidden mt-6 text-center">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">¡Cálculo Listo!</h2>
+                <p class="text-gray-600 mb-2">Para una piscina de <b id="finalVolume"></b> litros en modo <b id="finalTreatment"></b>, necesitas:</p>
+                <div class="space-y-3 mt-6 text-left max-w-md mx-auto">
+                    <div class="flex justify-between items-center bg-blue-50 p-4 rounded-lg result-item">
+                        <span class="font-semibold text-blue-800">Cloro Granulado:</span>
+                        <span id="cloroResult" class="font-bold text-lg text-blue-900"></span>
+                    </div>
+                    <div class="flex justify-between items-center bg-green-50 p-4 rounded-lg result-item">
+                        <span class="font-semibold text-green-800">Sulfato de Cobre:</span>
+                        <span id="cobreResult" class="font-bold text-lg text-green-900"></span>
+                    </div>
+                    <div class="flex justify-between items-center bg-indigo-50 p-4 rounded-lg result-item">
+                        <span class="font-semibold text-indigo-800">Sulfato de Aluminio:</span>
+                        <span id="aluminioResult" class="font-bold text-lg text-indigo-900"></span>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary mt-8" onclick="resetApp()">Calcular de Nuevo</button>
+            </section>
+
+        </div>
+        <footer class="text-center mt-4">
+            <p class="text-sm text-gray-500">Una herramienta sencilla para un agua perfecta.</p>
+        </footer>
+    </main>
+
+    <script>
+        // Store the state of the application
+        let state = {
+            treatmentType: null, // 'maintenance' or 'cleaning'
+        };
+
+        const DOSAGES = {
+            maintenance: {
+                cloro: 5,   // 5g per 1000L
+                cobre: 1,   // 1g per 1000L
+                aluminio: 10 // 10g per 1000L
+            },
+            cleaning: {
+                cloro: 10,  // 10g per 1000L
+                cobre: 2,   // 2g per 1000L
+                aluminio: 15 // 15g per 1000L
+            }
+        };
+
+        // UI Elements
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const results = document.getElementById('results');
+
+        function selectTreatment(type) {
+            state.treatmentType = type;
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+            step2.classList.add('animate-enter');
+        }
+
+        function toggleSizeInput(method) {
+            const volumeInput = document.getElementById('volumeInput');
+            const dimensionsInput = document.getElementById('dimensionsInput');
+
+            if (method === 'volume') {
+                volumeInput.classList.remove('hidden');
+                dimensionsInput.classList.add('hidden');
+            } else {
+                volumeInput.classList.add('hidden');
+                dimensionsInput.classList.remove('hidden');
+            }
+        }
+
+        function toggleShapeInputs(shape) {
+            const rectangularInputs = document.getElementById('rectangularInputs');
+            const roundInputs = document.getElementById('roundInputs');
+
+            if (shape === 'rectangular') {
+                rectangularInputs.classList.remove('hidden');
+                roundInputs.classList.add('hidden');
+            } else {
+                roundInputs.classList.remove('hidden');
+                rectangularInputs.classList.add('hidden');
+            }
+        }
+
+        function calculateDosage() {
+            let volume = 0;
+            const sizeMethod = document.querySelector('input[name="sizeMethod"]:checked');
+            
+            if (!sizeMethod) {
+                // Using a custom modal/alert would be better, but alert is used for simplicity
+                alert('Por favor, selecciona un método para definir el tamaño de la piscina.');
+                return;
+            }
+
+            if (sizeMethod.value === 'volume') {
+                volume = parseFloat(document.getElementById('poolVolume').value);
+            } else {
+                const shape = document.querySelector('input[name="poolShape"]:checked');
+                 if (!shape) {
+                    alert('Por favor, selecciona la forma de la piscina.');
+                    return;
+                }
+
+                if (shape.value === 'rectangular') {
+                    const length = parseFloat(document.getElementById('poolLength').value);
+                    const width = parseFloat(document.getElementById('poolWidth').value);
+                    const depth = parseFloat(document.getElementById('poolDepthRect').value);
+                    if (isNaN(length) || isNaN(width) || isNaN(depth) || length <= 0 || width <= 0 || depth <= 0) {
+                        alert('Por favor, ingresa medidas válidas para la piscina rectangular.');
+                        return;
+                    }
+                    // Volume in m^3 * 1000 to get liters
+                    volume = length * width * depth * 1000; 
+                } else { // round
+                    const diameter = parseFloat(document.getElementById('poolDiameter').value);
+                    const depth = parseFloat(document.getElementById('poolDepthRound').value);
+                    if (isNaN(diameter) || isNaN(depth) || diameter <= 0 || depth <= 0) {
+                        alert('Por favor, ingresa medidas válidas para la piscina redonda.');
+                        return;
+                    }
+                    const radius = diameter / 2;
+                    // Volume = PI * r^2 * depth * 1000
+                    volume = Math.PI * Math.pow(radius, 2) * depth * 1000;
+                }
+            }
+            
+            if (isNaN(volume) || volume <= 0) {
+                alert('El volumen calculado no es válido. Por favor, revisa los datos ingresados.');
+                return;
+            }
+
+            const doses = DOSAGES[state.treatmentType];
+            const volumeInThousands = volume / 1000;
+
+            const cloro = (volumeInThousands * doses.cloro).toFixed(1);
+            const cobre = (volumeInThousands * doses.cobre).toFixed(1);
+            const aluminio = (volumeInThousands * doses.aluminio).toFixed(1);
+
+            displayResults(volume, cloro, cobre, aluminio);
+        }
+
+        function displayResults(volume, cloro, cobre, aluminio) {
+            document.getElementById('finalVolume').innerText = Math.round(volume).toLocaleString('es-ES');
+            document.getElementById('finalTreatment').innerText = state.treatmentType === 'maintenance' ? 'Mantenimiento' : 'Limpieza';
+
+            document.getElementById('cloroResult').innerText = `${cloro} gramos`;
+            document.getElementById('cobreResult').innerText = `${cobre} gramos`;
+            document.getElementById('aluminioResult').innerText = `${aluminio} gramos`;
+            
+            step2.classList.add('hidden');
+            results.classList.remove('hidden');
+            results.classList.add('animate-enter');
+        }
+
+        function resetApp() {
+            state.treatmentType = null;
+            
+            // Reset forms
+            document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+            document.getElementById('inputByVolume').checked = true; // Default check
+            toggleSizeInput('volume');
+            
+            // Remove animation classes
+            step2.classList.remove('animate-enter');
+            results.classList.remove('animate-enter');
+            
+            // Show step 1 and hide others
+            results.classList.add('hidden');
+            step2.classList.add('hidden');
+            step1.classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
+
